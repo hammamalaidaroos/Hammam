@@ -1,0 +1,147 @@
+{
+  "entities": {
+    "SiteProfile": {
+      "title": "SiteProfile",
+      "description": "Public portfolio profile photo configuration managed by the admin.",
+      "type": "object",
+      "properties": {
+        "photoUrl": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "Public download URL of the profile photo stored in Firebase Storage."
+        },
+        "photoStoragePath": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Storage object path for the uploaded profile image."
+        },
+        "altText": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Accessible Arabic/English alt text for the profile portrait."
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the admin who last updated the profile photo."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the last update."
+        }
+      },
+      "required": ["photoUrl", "altText", "updatedBy", "updatedAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A software or IT engineering project showcased on the portfolio.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Project title (kept in English per design requirements)."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "Arabic description of the project."
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Project category such as Web, Mobile, or Desktop System."
+        },
+        "techStack": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Key technologies used, formatted as a concise string."
+        },
+        "githubUrl": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Optional GitHub repository URL."
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "Optional cover image path or URL."
+        },
+        "sortOrder": {
+          "type": "number",
+          "description": "Non-negative display ordering index."
+        },
+        "createdBy": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the admin who created the project."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the project was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the project was last updated."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "category",
+        "techStack",
+        "sortOrder",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized administrator registry entry.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "description": "Verified Google account email of the administrator."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "description": "Assigned administrative role."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin entry was created."
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/siteSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteProfile" },
+      "description": "Public portfolio visual settings (profile portrait URL and alt text)."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Portfolio projects displayed on the main page and managed in /admin."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Restricted admin allowlist documents."
+    }
+  }
+}

@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'hamamalidrose@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin();
+    }
+
+    function isValidSiteProfile(data) {
+      return data.keys().hasAll(['photoUrl', 'altText', 'updatedBy', 'updatedAt'])
+        && data.keys().hasOnly(['photoUrl', 'photoStoragePath', 'altText', 'updatedBy', 'updatedAt'])
+        && data.photoUrl is string && data.photoUrl.size() >= 1 && data.photoUrl.size() <= 2048
+        && (!('photoStoragePath' in data) || (data.photoStoragePath is string && data.photoStoragePath.size() <= 512))
+        && data.altText is string && data.altText.size() >= 1 && data.altText.size() <= 200
+        && data.updatedBy is string && data.updatedBy == request.auth.uid && isValidId(data.updatedBy)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll(['title', 'description', 'category', 'techStack', 'sortOrder', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['title', 'description', 'category', 'techStack', 'githubUrl', 'imageUrl', 'sortOrder', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+        && data.description is string && data.description.size() >= 1 && data.description.size() <= 1000
+        && data.category is string && data.category.size() >= 1 && data.category.size() <= 60
+        && data.techStack is string && data.techStack.size() >= 1 && data.techStack.size() <= 200
+        && (!('githubUrl' in data) || (data.githubUrl is string && data.githubUrl.size() <= 500))
+        && (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 2048))
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 10000
+        && data.createdBy is string && isValidId(data.createdBy)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Connection check document
+    match /test/{docId} {
+      allow get: if docId == 'connection';
+    }
+
+    // Public portfolio profile photo configuration (no PII)
+    match /siteSettings/{settingId} {
+      allow get: if isValidId(settingId) && settingId == 'profile';
+      allow create: if isValidId(settingId)
+        && settingId == 'profile'
+        && isAdmin()
+        && isValidSiteProfile(incoming())
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(settingId)
+        && settingId == 'profile'
+        && isAdmin()
+        && isValidSiteProfile(incoming())
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['photoUrl', 'photoStoragePath', 'altText', 'updatedBy', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // Public portfolio projects showcase (no PII)
+    match /projects/{projectId} {
+      allow get: if isValidId(projectId);
+      allow list: if resource.data.sortOrder >= 0;
+      allow create: if isValidId(projectId)
+        && isAdmin()
+        && isValidProject(incoming())
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(projectId)
+        && isAdmin()
+        && isValidProject(incoming())
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'category', 'techStack', 'githubUrl', 'imageUrl', 'sortOrder', 'updatedAt']);
+      allow delete: if isValidId(projectId) && isAdmin();
+    }
+
+    // Admin registry (read-only by self or existing admin; managed out-of-band)
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && isVerifiedUser() && (request.auth.uid == userId || isAdmin());
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+  }
+}

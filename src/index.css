@@ -1,0 +1,60 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+  }
+
+  .font-mono-tech {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes portraitFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes auraPulse {
+  0%, 100% {
+    opacity: 0.42;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.03);
+  }
+}
+
+.animate-portrait-float {
+  animation: portraitFloat 6s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+.animate-aura-pulse {
+  animation: auraPulse 5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-portrait-float,
+  .animate-aura-pulse {
+    animation: none;
+  }
+}

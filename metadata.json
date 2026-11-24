@@ -1,0 +1,8 @@
+{
+  "name": "همام عبد القادر العيدروس | تقنية معلومات",
+  "description": "الموقع الشخصي للمهندس همام عبد القادر علي العيدروس، متخصص في تقنية المعلومات وتطوير المواقع وتطبيقات Flutter والأنظمة البرمجية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
